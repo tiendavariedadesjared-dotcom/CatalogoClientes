@@ -331,7 +331,7 @@ function processInventory(items) {
   }
 
   // Orden de tallas estándar
-  const sizeOrder = ["XS","S","M","L","XL","XXL","3XL","4XL","4","6","8","10","12","14","16","Única"];
+  const sizeOrder = ["XS","S","M","L","XL","2XL","XXL","3XL","4XL","5XL","4","6","8","10","12","14","16","Única"];
   const sortSize = t => { const i = sizeOrder.indexOf(t); return i >= 0 ? i : 99; };
 
   allGroups = Array.from(map.values()).map(g => ({
