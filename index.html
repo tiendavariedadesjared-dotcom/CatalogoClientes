@@ -314,8 +314,12 @@ function processInventory(items) {
     const extrasExtra = item.extras ? Object.entries(item.extras)
       .filter(([k]) => k !== "Estilo" && k !== "Categoría")
       .map(([k, v]) => ({ k, v })) : [];
-    const extrasKey = extrasExtra.map(e => e.k + ":" + e.v).join("|");
-    const key = [item.eq, item.dor, item.col, item.ver, item.año || "", estilo, extrasKey].join("|");
+    // Clave con TODAS las variables: campos fijos + todos los extras
+    const todosExtras = item.extras ? Object.entries(item.extras)
+      .filter(([k]) => k !== "Categoría")
+      .sort(([a],[b]) => a.localeCompare(b))
+      .map(([k,v]) => `${k}:${v}`).join("|") : "";
+    const key = [item.eq||"", item.dor||"", item.col||"", item.ver||"", item.año||"", cat, todosExtras].join("|");
 
     if (!map.has(key)) {
       map.set(key, {
