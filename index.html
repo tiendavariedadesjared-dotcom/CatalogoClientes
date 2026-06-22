@@ -305,12 +305,17 @@ function processInventory(items) {
   // Solo con stock
   const withStock = items.filter(i => parseInt(i.stk) > 0);
 
-  // Agrupar por modelo: eq+dor+col+ver+año+extras.Estilo
+  // Agrupar por modelo: eq+dor+col+ver+año+todos los extras
   const map = new Map();
   for (const item of withStock) {
     const estilo = (item.extras && item.extras["Estilo"]) ? item.extras["Estilo"] : "";
     const cat = (item.extras && item.extras["Categoría"]) ? item.extras["Categoría"] : "";
-    const key = [item.eq, item.dor, item.col, item.ver, item.año || "", estilo].join("|");
+    // Extras adicionales (todo excepto Estilo y Categoría)
+    const extrasExtra = item.extras ? Object.entries(item.extras)
+      .filter(([k]) => k !== "Estilo" && k !== "Categoría")
+      .map(([k, v]) => ({ k, v })) : [];
+    const extrasKey = extrasExtra.map(e => e.k + ":" + e.v).join("|");
+    const key = [item.eq, item.dor, item.col, item.ver, item.año || "", estilo, extrasKey].join("|");
 
     if (!map.has(key)) {
       map.set(key, {
@@ -321,6 +326,7 @@ function processInventory(items) {
         año: item.año || "",
         estilo,
         cat,
+        extrasExtra,
         fotos: item.fotos || [],
         tallas: new Set()
       });
@@ -438,7 +444,12 @@ function render() {
       ? `<img class="card-img" src="${escHtml(portada.url)}" alt="${escHtml(g.eq)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-img-placeholder\\'>👕</div>'">`
       : `<div class="card-img-placeholder">👕</div>`;
 
-    const detalles = [g.col, g.ver, g.estilo, g.año].filter(Boolean).join(" · ");
+    const extrasTexto = (g.extrasExtra || []).map(e => {
+      let v = e.v;
+      if (e.k.toLowerCase().includes("edici") && v.toLowerCase().includes("especial")) v = "Edición";
+      return v;
+    }).join(" · ");
+    const detalles = [g.col, g.ver, g.estilo, g.año, extrasTexto].filter(Boolean).join(" · ");
     const fotosLabel = g.fotos.length > 1 ? `📷 ${g.fotos.length} fotos` : "";
 
     const sizesHtml = g.tallas.length
@@ -472,12 +483,19 @@ function openModal(g) {
   if (galleryIdx < 0) galleryIdx = 0;
   renderGallery();
 
+  const extrasModales = (g.extrasExtra || []).map(e => {
+    let v = e.v;
+    if (e.k.toLowerCase().includes("edici") && v.toLowerCase().includes("especial")) v = "Edición";
+    return { l: e.k, v };
+  });
+
   const detalles = [
     g.col ? {l:"Color", v:g.col} : null,
     g.ver ? {l:"Versión", v:g.ver} : null,
     g.año ? {l:"Año", v:g.año} : null,
     g.estilo ? {l:"Estilo", v:g.estilo} : null,
     g.cat ? {l:"Categoría", v:g.cat} : null,
+    ...extrasModales,
   ].filter(Boolean);
 
   const metaHtml = detalles.map(d =>
@@ -545,7 +563,12 @@ function abrirPopupTallas(g) {
   // Confirmar → armar mensaje y abrir WhatsApp
   confirmar.onclick = () => {
     const tallasTexto = Array.from(seleccionadas).join(", ");
-    const linea1 = [g.eq, g.dor, g.col, g.ver, g.estilo, g.año].filter(Boolean).join(" · ");
+    const extrasWapp = (g.extrasExtra || []).map(e => {
+      let v = e.v;
+      if (e.k.toLowerCase().includes("edici") && v.toLowerCase().includes("especial")) v = "Edición";
+      return v;
+    }).join(" · ");
+    const linea1 = [g.eq, g.dor, g.col, g.ver, g.estilo, g.año, extrasWapp].filter(Boolean).join(" · ");
     const portada = g.fotos && (g.fotos.find(f => f.principal) || g.fotos[0]);
     const partes = [
       "Hola! Me interesa esta camisa:",
