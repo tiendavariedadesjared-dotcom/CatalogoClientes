@@ -303,7 +303,7 @@ onSnapshot(docRef, snap => {
 
 function processInventory(items) {
   // Solo con stock
-  const withStock = items.filter(i => parseInt(i.stk) > 0);
+  const withStock = items.filter(i => parseInt(i.stk) > 0 && !i.soloTienda);
 
   // Agrupar por modelo: eq+dor+col+ver+año+todos los extras
   const map = new Map();
